@@ -2,12 +2,14 @@
 #if defined(ESP8266)|| defined(ESP32) || defined(AVR)
 #include <EEPROM.h>
 #endif
-#include <LiquidCrystal.h>
+#include "Wire.h" // For I2C
+#include "LiquidCrystal_I2C.h"
 
 //***********************************************
 //Display
 //***********************************************
-//configuración de display
+//Set the pins on the I2C chip used for LCD connections
+LiquidCrystal_I2C lcd(0x27, 20, 4); // 0x27 is the default I2C bus address
 
 //***********************************************
 //Sensor de Carga
@@ -17,7 +19,6 @@ const int HX711_sck = 5; //mcu > HX711 sck pin
 
 //HX711 constructor:
 HX711_ADC LoadCell(HX711_dout, HX711_sck);
-
 const int calVal_eepromAdress = 0;
 unsigned long t = 0;
 
@@ -28,7 +29,7 @@ const int Trigger = 2;   //Pin digital 2 para el Trigger del sensor
 const int Echo = 3;   //Pin digital 3 para el Echo del sensor
 
 //Constantes
-const int TIEMPOINICIAL = 2000;   //tiempo inicial para que los sensores se estabilicen
+const int TIEMPODELAY = 2000;   //tiempo delay
 
 void setup() {
 
@@ -40,23 +41,42 @@ void setup() {
 
 void loop() {
 
-  delay(TIEMPOINICIAL);
+  delay(TIEMPODELAY);
 
   int peso = obtenerPeso();
   int altura = obtenerAltura();
   float imc = calcularIMC(peso, altura);
-  imprimirResultados();
+  imprimirResultados(peso, altura, imc);
 
 }
 
-void imprimirResultados() {
+void imprimirResultados(int peso, int altura, float imc) {
   //TODO imprimir resultados si los valores peso altura e IMC son consistentes
   //TODO imprimir IMC con un solo decimal ej 23.2
 
+  if (peso > 25 && altura > 30) {
+    //Imprimir peso
+    lcd.setCursor(0, 1);
+    lcd.print("Peso: ");
+    lcd.print(peso);
+    lcd.print(" kgs");
+
+    //Imprimir altura
+    lcd.setCursor(0, 2);
+    lcd.print("Altura ");
+    lcd.print(altura);
+    lcd.print(" cms");
+
+    //Imprimir IMC
+    lcd.setCursor(0, 3);
+    lcd.print("IMC: ");
+    lcd.print(imc,1);         // el segundo parárametro es la cantidad de decimales
+  }
 }
 
 float calcularIMC(int peso, int altura) {
-  return peso / (altura * altura);
+  float alturaMts = (float)altura / 100;
+  return peso / (alturaMts * alturaMts);
 }
 
 int obtenerPeso() {
@@ -114,7 +134,22 @@ int obtenerAltura() {
 }
 
 void iniciarDisplay() {
-  //Inicializar display
+
+  /*
+     https://www.instructables.com/How-to-Use-I2C-Serial-LCD-20X4-Yellow-Backlight/
+     Connect I2C Serial LCD Module to Arduino UNO as following :
+      VCC to 5V
+      GND to GND
+      SDA to A4
+      SCL to A5
+  */
+
+  // Set off LCD module
+  lcd.begin (20, 4); // 20 x 4 LCD module
+  // Turn on the blacklight and print a message.
+  lcd.backlight();
+  lcd.setBacklight(HIGH);
+  lcd.print("Indice Masa Corporal");
 }
 
 void iniciarSensorDistancia() {
