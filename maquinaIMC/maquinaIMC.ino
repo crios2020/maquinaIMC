@@ -55,6 +55,11 @@ void imprimirResultados(int peso, int altura, float imc) {
   //TODO imprimir IMC con un solo decimal ej 23.2
 
   if (peso > 25 && altura > 30) {
+
+    //Limpiar pantalla
+    lcd.clear();
+    lcd.print("Indice Masa Corporal");
+
     //Imprimir peso
     lcd.setCursor(0, 1);
     lcd.print("Peso: ");
@@ -70,7 +75,10 @@ void imprimirResultados(int peso, int altura, float imc) {
     //Imprimir IMC
     lcd.setCursor(0, 3);
     lcd.print("IMC: ");
-    lcd.print(imc,1);         // el segundo parárametro es la cantidad de decimales
+    lcd.print(imc, 1);        // el segundo parárametro es la cantidad de decimales
+  } else {
+    lcd.clear();
+    lcd.print("Indice Masa Corporal");
   }
 }
 
